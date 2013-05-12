@@ -1,0 +1,135 @@
+@charset "UTF-8";
+/* CSS Document */
+
+body {
+    font-size: 90%;
+    background: #F0F0F0;
+    padding-left: 20px;
+}
+
+#drop {
+    font-size: 110%;
+    color: #F0F0F0;
+    text-align: center;
+    background: #cc9593;
+    padding: 5px;
+    width: 200px;
+    margin-bottom: 5px;
+}
+
+#drop p {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#file {
+    margin-bottom: 20px;
+}
+
+a {
+    color: #b10000;
+}
+
+table {
+    border: 0;
+    border-collapse: separate;
+    border-spacing: 0 2px;
+    margin-bottom: 20px;
+}
+
+table table {
+    margin-top: 5px;
+    margin-left: 10px;
+}
+
+table td {
+    border: 1px solid #656a64;
+    border-left-width: 0;
+    background: #E6EBEE;
+    padding: 2px 5px;
+}
+
+table th {
+    border: 1px #656a64 solid;
+    border-left-width: 0;
+    background: #A6A7D0;
+}
+
+table th:first-child {
+    border-left-width: 1px;
+}
+
+.border-left {
+    border-left-width: 1px;
+}
+
+#other-items th {
+    text-align: left;
+}
+
+td.constant-type,
+.constant-utf8-value {
+    color: #6e641d;
+}
+
+.method {
+    width: 100%;
+    padding-right: 30px;
+}
+
+.method th {
+    background: #a4af9f;
+}
+
+.method td {
+    background: #ebf5ec;
+}
+
+.attributes {
+    width: 100%;
+    padding-right: 30px;
+}
+
+.attributes tbody th {
+    width: 10px;
+}
+
+.attributes th {
+    background: #b6a9bc;
+}
+
+.attributes td {
+    background: #d3d3d4;
+}
+
+.method tbody th {
+    width: 10px;
+}
+
+.code-table {
+    width: 100%;
+    padding-right: 30px;
+}
+
+.code th {
+    color: #FFFFFF;
+    background: #757a7b;
+}
+
+.code td {
+    color: #FFFFFF;
+    background: #48494e;
+}
+
+.operand {
+    padding-left: 30px;
+}
+
+.comment {
+    color: #48494e;
+}
+
+.offset-table {
+    color: #48494e;
+    padding-left: 90px;
+}

@@ -1,6 +1,6 @@
 package javap;
 import internal.html.DataView;
-import jvm.klass.Klass.ConstantPoolInfo;
+import jvm.klass.ConstantPoolInfo;
 class ConstantPoolParser {
 
     var source:ClassSource;
@@ -11,6 +11,7 @@ class ConstantPoolParser {
 
     public function readConstantPoolInfo():ConstantPoolInfo {
         var tag = source.readU1();
+        trace(tag);
         var info:ConstantPoolInfo;
         switch(tag){
             case 1:
@@ -65,75 +66,83 @@ class ConstantPoolParser {
                 i++;
                 c += source.readU1() & 0x3f;
                 bytes.addChar(c);
-            } else if (b <= 0xe0) {
+            } else if (b <= 0xef) {
+                c = ((b & 0x0f) << 12);
                 i++;
-                c = ((source.readU1() & 0x1f) << 6) | 0x0800;
+                c += ((source.readU1() & 0x3f) << 6);
                 i++;
                 c += source.readU1() & 0x3f;
                 bytes.addChar(c);
             } else {
-                c = ((b & 0x0f) << 12);
                 i++;
-                c += (source.readU1() & 0x3f) << 6;
+                c = ((b & 0x0f) << 6);
                 i++;
-                c += source.readU1() & 0x3f;
+                c += (source.readU1() & 0x3f);
+                bytes.addChar(c);
+
+                i++;
+                source.readU1();
+                i++;
+                c = ((b & 0x0f) << 6);
+                i++;
+                c += (source.readU1() & 0x3f);
                 bytes.addChar(c);
             }
             i++;
         }
-        return ConstantPoolInfo.Utf8Info(tag, length, bytes.toString());
+        return ConstantPoolInfo.Utf8Info({tag:tag, length:length, bytes:bytes.toString()});
     }
 
     inline function readConstantInteger(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.IntegerInfo(tag, source.readU4());
+        return ConstantPoolInfo.IntegerInfo({tag:tag, bytes:source.readU4()});
     }
 
     inline function readConstantFloat(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.FloatInfo(tag, source.readU4());
+        return ConstantPoolInfo.FloatInfo({tag:tag, bytes:source.readU4()});
     }
 
     inline function readConstantLong(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.LongInfo(tag, source.readU4(), source.readU4());
+        return ConstantPoolInfo.LongInfo({tag:tag, highBytes:source.readU4(), lowBytes:source.readU4()});
     }
 
     inline function readConstantDouble(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.DoubleInfo(tag, source.readU4(), source.readU4());
+        return ConstantPoolInfo.DoubleInfo({tag:tag, highBytes:source.readU4(), lowBytes:source.readU4()});
     }
 
     inline function readConstantClass(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.ClassInfo(tag, source.readU2());
+        return ConstantPoolInfo.ClassInfo({tag:tag, nameIndex:source.readU2()});
     }
 
     inline function readConstantString(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.StringInfo(tag, source.readU2());
+        return ConstantPoolInfo.StringInfo({tag:tag, stringIndex:source.readU2()});
     }
 
     inline function readConstantFieldref(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.FieldrefInfo(tag, source.readU2(), source.readU2());
+        return ConstantPoolInfo.FieldrefInfo({tag:tag, classIndex:source.readU2(), nameAndTypeIndex:source.readU2()});
     }
 
     inline function readConstantMethodref(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.MethodrefInfo(tag, source.readU2(), source.readU2());
+        return ConstantPoolInfo.MethodrefInfo({tag:tag, classIndex:source.readU2(), nameAndTypeIndex:source.readU2()});
     }
 
     inline function readConstantInterfaceMethodref(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.InterfaceMethodrefInfo(tag, source.readU2(), source.readU2());
+        return ConstantPoolInfo.InterfaceMethodrefInfo({tag:tag, classIndex:source.readU2(), nameAndTypeIndex:source.readU2()});
     }
 
     inline function readConstantNameAndType(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.NameAndTypeInfo(tag, source.readU2(), source.readU2());
+        return ConstantPoolInfo.NameAndTypeInfo({tag:tag, nameIndex:source.readU2(), descriptorIndex:source.readU2()});
     }
 
 
     inline function readConstantMethodHandle(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.MethodHandleInfo(tag, source.readU1(), source.readU2());
+        return ConstantPoolInfo.MethodHandleInfo({tag:tag, referenceKind:source.readU1(), referenceIndex:source.readU2()});
     }
 
     inline function readConstantMethodType(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.ConstantMethodTypeInfo(tag, source.readU2());
+        return ConstantPoolInfo.ConstantMethodTypeInfo({tag:tag, descriptorIndex:source.readU2()});
     }
 
     inline function readConstantInvokeDynamic(tag:Int):ConstantPoolInfo {
-        return ConstantPoolInfo.ConstantInvokeDynamicInfo(tag, source.readU2(), source.readU2());
+        return ConstantPoolInfo.ConstantInvokeDynamicInfo({tag:tag, bootstrapMethodAttrIndex:source.readU2(), nameAndTypeIndex:source.readU2()});
     }
 }

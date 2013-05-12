@@ -1,6 +1,7 @@
--js bin/App.js
--main javap.Main
+-js html/bin/App.js
+-main web.Main
 -cp src
---dead-code-elimination
+-dce full
 --js-modern
+-debug
 -lib jQueryExtern Knockout

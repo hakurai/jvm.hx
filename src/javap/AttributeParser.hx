@@ -1,9 +1,7 @@
 package javap;
-import jvm.klass.Klass.AttributeInfo;
-import jvm.klass.Klass.ConstantPoolInfo;
+import jvm.klass.StackMapFrameEntry;
+import jvm.klass.AttributeInfo;
 import jvm.klass.Klass.ExceptionTableEntry;
-import jvm.klass.Klass.StackMapFrameEntry;
-import jvm.klass.Klass.VerificationTypeInfo;
 import jvm.klass.Klass.ClassesEntry;
 import jvm.klass.Klass.LineNumberTableEntry;
 import jvm.klass.Klass.LocalVariableTableEntry;
@@ -14,6 +12,8 @@ import jvm.klass.Klass.ElementValue;
 import jvm.klass.Klass.ParameterAnnotation;
 import jvm.klass.Klass.BootstrapMethod;
 import jvm.klass.Klass.MethodParameter;
+import jvm.klass.ConstantPoolInfo;
+
 
 class AttributeParser {
 
@@ -29,7 +29,7 @@ class AttributeParser {
         var attributeNameIndex = source.readU2();
         var attributeLength = source.readU4();
         var attributeName = switch(constantPool[attributeNameIndex]){
-            case Utf8Info(tag, length, bytes): bytes;
+            case Utf8Info(body): body.bytes;
             default: throw "LinkageError";
         };
 
@@ -103,7 +103,7 @@ class AttributeParser {
     }
 
     inline function readConstantValue(attributeNameIndex, attributeLength):AttributeInfo {
-        return AttributeInfo.ConstantValue(attributeNameIndex, attributeLength, source.readU2());
+        return AttributeInfo.ConstantValue({attributeNameIndex:attributeNameIndex, attributeLength:attributeLength, constantValueIndex:source.readU2()});
     }
 
     function readCode(attributeNameIndex, attributeLength):AttributeInfo {
@@ -132,18 +132,18 @@ class AttributeParser {
             attributes.push(readAttribute());
         }
 
-        return AttributeInfo.Code(
-            attributeNameIndex,
-            attributeLength,
-            maxStack,
-            maxLocals,
-            codeLength,
-            code,
-            exceptionTableLength,
-            exceptionTable,
-            attributesCount,
-            attributes
-        );
+        return AttributeInfo.Code({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        maxStack:maxStack,
+        maxLocals:maxLocals,
+        codeLength:codeLength,
+        code:code,
+        exceptionTableLength:exceptionTableLength,
+        exceptionTable:exceptionTable,
+        attributesCount:attributesCount,
+        attributes:attributes
+        });
 
     }
 
@@ -164,40 +164,40 @@ class AttributeParser {
             entries.push(readStackMapFrame());
         }
 
-        return AttributeInfo.StackMapTable(
-            attributeNameIndex,
-            attributeLength,
-            numberOfEntries,
-            entries
-        );
+        return AttributeInfo.StackMapTable({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numberOfEntries:numberOfEntries,
+        entries:entries
+        });
     }
 
     inline function readStackMapFrame():StackMapFrameEntry {
         var frameType = source.readU1();
         return if (frameType < 64) {
 //same_frame
-            StackMapFrameEntry.SameFrame(frameType);
+            StackMapFrameEntry.SameFrame({frameType:frameType});
 
         } else if (frameType < 128) {
 //same_locals_1_stack_item_frame
             var stack = readVerificationTypeInfo();
-            StackMapFrameEntry.SameLocals1StackItemFrame(frameType, stack);
+            StackMapFrameEntry.SameLocals1StackItemFrame({frameType:frameType, stack:stack});
 
         } else if (frameType == 247) {
 //same_locals_1_stack_item_frame_extended
             var offsetDelta = source.readU2();
             var stack = readVerificationTypeInfo();
-            StackMapFrameEntry.SameLocals1StackItemFrameExtended(frameType, offsetDelta, stack);
+            StackMapFrameEntry.SameLocals1StackItemFrameExtended({frameType:frameType, offsetDelta:offsetDelta, stack:stack});
 
         } else if (248 <= frameType && frameType <= 250) {
 //chop_frame
             var offsetDelta = source.readU2();
-            StackMapFrameEntry.ChopFrame(frameType, offsetDelta);
+            StackMapFrameEntry.ChopFrame({frameType:frameType, offsetDelta:offsetDelta});
 
         } else if (frameType == 251) {
 //same_frame_extended
             var offsetDelta = source.readU2();
-            StackMapFrameEntry.SameFrameExtended(frameType, offsetDelta);
+            StackMapFrameEntry.SameFrameExtended({frameType:frameType, offsetDelta:offsetDelta});
 
         } else if (252 <= frameType && frameType <= 254) {
 //append_frame
@@ -208,7 +208,7 @@ class AttributeParser {
             for (i in 0...len) {
                 locals.push(readVerificationTypeInfo());
             }
-            StackMapFrameEntry.AppendFrame(frameType, offsetDelta, locals);
+            StackMapFrameEntry.AppendFrame({frameType:frameType, offsetDelta:offsetDelta, locals:locals});
 
         } else if (frameType == 255) {
 //full_frame
@@ -225,7 +225,7 @@ class AttributeParser {
             for (i in 0...numberOfStackItems) {
                 stack.push(readVerificationTypeInfo());
             }
-            StackMapFrameEntry.FullFrame(frameType, offsetDelta, numberOfLocals, locals, numberOfStackItems, stack);
+            StackMapFrameEntry.FullFrame({frameType:frameType, offsetDelta:offsetDelta, numberOfLocals:numberOfLocals, locals:locals, numberOfStackItems:numberOfStackItems, stack:stack});
 
         } else {
             throw "LinkageError";
@@ -237,25 +237,25 @@ class AttributeParser {
         var tag = source.readU1();
         return switch(tag){
             case 0:
-                VerificationTypeInfo.TopVariableInfo(tag);
+                VerificationTypeInfo.TopVariableInfo({tag:tag});
             case 1:
-                VerificationTypeInfo.IntegerVariableInfo(tag);
+                VerificationTypeInfo.IntegerVariableInfo({tag:tag});
             case 2:
-                VerificationTypeInfo.FloatVariableInfo(tag);
+                VerificationTypeInfo.FloatVariableInfo({tag:tag});
             case 3:
-                VerificationTypeInfo.DoubleVariableInfo(tag);
+                VerificationTypeInfo.DoubleVariableInfo({tag:tag});
             case 4:
-                VerificationTypeInfo.LongVariableInfo(tag);
+                VerificationTypeInfo.LongVariableInfo({tag:tag});
             case 5:
-                VerificationTypeInfo.NullVariableInfo(tag);
+                VerificationTypeInfo.NullVariableInfo({tag:tag});
             case 6:
-                VerificationTypeInfo.UninitializedThisVariableInfo(tag);
+                VerificationTypeInfo.UninitializedThisVariableInfo({tag:tag});
             case 7:
                 var cpoolIndex = source.readU2();
-                VerificationTypeInfo.ObjectVariableInfo(tag, cpoolIndex);
+                VerificationTypeInfo.ObjectVariableInfo({tag:tag, cpoolIndex:cpoolIndex});
             case 8:
                 var offset = source.readU2();
-                VerificationTypeInfo.UninitializedVariableInfo(tag, offset);
+                VerificationTypeInfo.UninitializedVariableInfo({tag:tag, offset:offset});
             default:
                 throw "LinkageError";
         }
@@ -268,12 +268,12 @@ class AttributeParser {
             exceptionIndexTable.push(source.readU2());
         }
 
-        return AttributeInfo.Exceptions(
-            attributeNameIndex,
-            attributeLength,
-            numberOfExceptions,
-            exceptionIndexTable
-        );
+        return AttributeInfo.Exceptions({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numberOfExceptions:numberOfExceptions,
+        exceptionIndexTable:exceptionIndexTable
+        });
     }
 
     function readInnerClasses(attributeNameIndex, attributeLength):AttributeInfo {
@@ -288,33 +288,44 @@ class AttributeParser {
             });
         }
 
-        return AttributeInfo.InnerClasses(
-            attributeNameIndex,
-            attributeLength,
-            numberOfClasses,
-            classes
-        );
+        return AttributeInfo.InnerClasses({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numberOfClasses:numberOfClasses,
+        classes:classes
+        });
     }
 
     function readEnclosingMethod(attributeNameIndex, attributeLength):AttributeInfo {
-        return AttributeInfo.EnclosingMethod(
-            attributeNameIndex,
-            attributeLength,
-            source.readU2(),
-            source.readU2()
-        );
+        return AttributeInfo.EnclosingMethod({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        classIndex:source.readU2(),
+        methodIndex:source.readU2()
+        });
     }
 
     function readSynthetic(attributeNameIndex, attributeLength):AttributeInfo {
-        return AttributeInfo.Synthetic(attributeNameIndex, attributeLength);
+        return AttributeInfo.Synthetic({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength
+        });
     }
 
     function readSignature(attributeNameIndex, attributeLength):AttributeInfo {
-        return AttributeInfo.Signature(attributeNameIndex, attributeLength, source.readU2());
+        return AttributeInfo.Signature({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        signatureIndex:source.readU2()
+        });
     }
 
     function readSourceFile(attributeNameIndex, attributeLength):AttributeInfo {
-        return AttributeInfo.SourceFile(attributeNameIndex, attributeLength, source.readU2());
+        return AttributeInfo.SourceFile({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        sourcefileIndex:source.readU2()
+        });
     }
 
     function readSourceDebugExtension(attributeNameIndex, attributeLength):AttributeInfo {
@@ -322,7 +333,11 @@ class AttributeParser {
         for (i in 0...attributeLength) {
             debugExtension.push(source.readU1());
         }
-        return AttributeInfo.SourceDebugExtension(attributeNameIndex, attributeLength, debugExtension);
+        return AttributeInfo.SourceDebugExtension({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        debugExtension:debugExtension
+        });
     }
 
     function readLineNumberTable(attributeNameIndex, attributeLength):AttributeInfo {
@@ -331,7 +346,12 @@ class AttributeParser {
         for (i in 0...lineNumberTableLength) {
             lineNumberTable.push({startPC: source.readU2(), lineNumber: source.readU2()});
         }
-        return AttributeInfo.LineNumberTable(attributeNameIndex, attributeLength, lineNumberTableLength, lineNumberTable);
+        return AttributeInfo.LineNumberTable({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        lineNumberTableLength:lineNumberTableLength,
+        lineNumberTable:lineNumberTable
+        });
     }
 
     function readLocalVariableTable(attributeNameIndex, attributeLength):AttributeInfo {
@@ -347,12 +367,12 @@ class AttributeParser {
                 }
             );
         }
-        return AttributeInfo.LocalVariableTable(
-            attributeNameIndex,
-            attributeLength,
-            localVariableTableLength,
-            localVariableTable
-        );
+        return AttributeInfo.LocalVariableTable({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        localVariableTableLength:localVariableTableLength,
+        localVariableTable:localVariableTable
+        });
     }
 
     function readLocalVariableTypeTable(attributeNameIndex, attributeLength):AttributeInfo {
@@ -368,16 +388,19 @@ class AttributeParser {
                 }
             );
         }
-        return AttributeInfo.LocalVariableTypeTable(
-            attributeNameIndex,
-            attributeLength,
-            localVariableTypeTableLength,
-            localVariableTypeTable
-        );
+        return AttributeInfo.LocalVariableTypeTable({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        localVariableTypeTableLength:localVariableTypeTableLength,
+        localVariableTypeTable:localVariableTypeTable
+        });
     }
 
     function readDeprecated(attributeNameIndex, attributeLength):AttributeInfo {
-        return AttributeInfo.Deprecated(attributeNameIndex, attributeLength);
+        return AttributeInfo.Deprecated({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength
+        });
     }
 
     function readRuntimeVisibleAnnotations(attributeNameIndex, attributeLength):AttributeInfo {
@@ -387,12 +410,12 @@ class AttributeParser {
             annotations.push(readAnnotation());
         }
 
-        return AttributeInfo.RuntimeVisibleAnnotations(
-            attributeNameIndex,
-            attributeLength,
-            numAnnotations,
-            annotations
-        );
+        return AttributeInfo.RuntimeVisibleAnnotations({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numAnnotations:numAnnotations,
+        annotations:annotations
+        });
     }
 
     function readAnnotation():Annotation {
@@ -468,12 +491,12 @@ class AttributeParser {
             annotations.push(readAnnotation());
         }
 
-        return AttributeInfo.RuntimeInvisibleAnnotations(
-            attributeNameIndex,
-            attributeLength,
-            numAnnotations,
-            annotations
-        );
+        return AttributeInfo.RuntimeInvisibleAnnotations({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numAnnotations:numAnnotations,
+        annotations:annotations
+        });
     }
 
     function readRuntimeVisibleParameterAnnotations(attributeNameIndex, attributeLength):AttributeInfo {
@@ -489,12 +512,12 @@ class AttributeParser {
             parameterAnnotations.push({numAnnotations:numAnnotations, annotations:annotations});
         }
 
-        return AttributeInfo.RuntimeVisibleParameterAnnotations(
-            attributeNameIndex,
-            attributeLength,
-            numParameters,
-            parameterAnnotations
-        );
+        return AttributeInfo.RuntimeVisibleParameterAnnotations({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numParameters:numParameters,
+        parameterAnnotations:parameterAnnotations
+        });
     }
 
     function readRuntimeInvisibleParameterAnnotations(attributeNameIndex, attributeLength):AttributeInfo {
@@ -510,22 +533,22 @@ class AttributeParser {
             parameterAnnotations.push({numAnnotations:numAnnotations, annotations:annotations});
         }
 
-        return AttributeInfo.RuntimeInvisibleParameterAnnotations(
-            attributeNameIndex,
-            attributeLength,
-            numParameters,
-            parameterAnnotations
-        );
+        return AttributeInfo.RuntimeInvisibleParameterAnnotations({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numParameters:numParameters,
+        parameterAnnotations:parameterAnnotations
+        });
     }
 
     function readAnnotationDefault(attributeNameIndex, attributeLength):AttributeInfo {
         var defaultValue = readElementValue();
 
-        return AttributeInfo.AnnotationDefault(
-            attributeNameIndex,
-            attributeLength,
-            defaultValue
-        );
+        return AttributeInfo.AnnotationDefault({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        defaultValue:defaultValue
+        });
     }
 
     function readBootstrapMethods(attributeNameIndex, attributeLength):AttributeInfo {
@@ -535,11 +558,11 @@ class AttributeParser {
             bootstrapMethods.push(readBootstrapMethod());
         }
 
-        return AttributeInfo.BootstrapMethods(
-            attributeNameIndex,
-            attributeLength,
-            bootstrapMethods
-        );
+        return AttributeInfo.BootstrapMethods({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        bootstrapMethods:bootstrapMethods
+        });
     }
 
     inline function readBootstrapMethod():BootstrapMethod {
@@ -568,11 +591,11 @@ class AttributeParser {
             });
         }
 
-        return AttributeInfo.MethodParameters(
-            attributeNameIndex,
-            attributeLength,
-            numMethodParameters,
-            methodParameters
-        );
+        return AttributeInfo.MethodParameters({
+        attributeNameIndex:attributeNameIndex,
+        attributeLength:attributeLength,
+        numMethodParameters:numMethodParameters,
+        methodParameters:methodParameters
+        });
     }
 }

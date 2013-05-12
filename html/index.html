@@ -1,0 +1,1455 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta charset=UTF-8>
+    <link rel="stylesheet" href="index.css" type="text/css"/>
+    <script type="text/javascript" src="lib/jquery-1.8.2.min.js"></script>
+    <script type="text/javascript" src="lib/knockout-2.2.0.js"></script>
+    <title>WE LOVE JAVA BYTECODE</title>
+</head>
+<body>
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/ja_JP/all.js#xfbml=1";
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+
+<div id="social">
+    <a href="http://b.hatena.ne.jp/entry/http://hakurai.github.io/jvm.hx/html/" class="hatena-bookmark-button"
+       data-hatena-bookmark-title="WE LOVE JAVA BYTECODE" data-hatena-bookmark-layout="standard-balloon"
+       title="このエントリーをはてなブックマークに追加"><img src="http://b.st-hatena.com/images/entry-button/button-only.gif"
+                                         alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;"/></a>
+    <script type="text/javascript" src="http://b.st-hatena.com/js/bookmark_button.js" charset="utf-8"
+            async="async"></script>
+    <a href="https://twitter.com/share" class="twitter-share-button" data-hashtags="java">Tweet</a>
+    <script>!function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (!d.getElementById(id)) {
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "//platform.twitter.com/widgets.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }
+    }(document, "script", "twitter-wjs");</script>
+    <div class="fb-like" data-href="http://hakurai.github.io/jvm.hx/html/" data-send="false" data-layout="button_count" data-width="300" data-show-faces="false"></div>
+</div>
+<h1>WE LOVE JAVA BYTECODE</h1>
+
+<p>Pure JavaScript Java class file disassembler <a href="https://github.com/hakurai/jvm.hx">Source(GitHub)</a></p>
+
+<div id="drop">
+    <p>DROP CLASS FILE</p>
+    <p>HERE!</p>
+</div>
+<input type="file" id="file" name="files"/>
+<input type="text" id="url" value="Hoge.class"/>
+<input type="button" value="get" id="getFromURL">
+
+<div>
+
+    <table id="other-items">
+        <tbody>
+        <tr>
+            <th>magic</th>
+            <td>CAFEBABE</td>
+        </tr>
+        <tr>
+            <th>minor_version</th>
+            <td data-bind="text: minorVersion"></td>
+        </tr>
+        <tr>
+            <th>major_version</th>
+            <td data-bind="text: majorVersion"></td>
+        </tr>
+        <tr>
+            <th>constant_pool_count</th>
+            <td data-bind="text: constantPoolCount"></td>
+        </tr>
+        <tr>
+            <th>access_flags</th>
+            <td data-bind="text: accessFlags"></td>
+        </tr>
+        <tr>
+            <th>this_class</th>
+            <td data-bind="constantPool: thisClass()"></td>
+        </tr>
+        <tr>
+            <th>super_class</th>
+            <td data-bind="constantPool: superClass()"></td>
+        </tr>
+        <tr>
+            <th>interfaces_count</th>
+            <td data-bind="text: interfacesCount"></td>
+        </tr>
+        <tr>
+            <th>fields_count</th>
+            <td data-bind="text: fieldsCount"></td>
+        </tr>
+        <tr>
+            <th>methods_count</th>
+            <td data-bind="text: methodsCount"></td>
+        </tr>
+        <tr>
+            <th>attributes_count</th>
+            <td data-bind="text: attributesCount"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table id="constant-pool" border="1" cellspacing="0" cellpadding="3">
+        <thead>
+        <tr>
+            <th colspan="5">constant_pool</th>
+        </tr>
+        <tr>
+            <th>index</th>
+            <th>ConstantType</th>
+            <th>tag</th>
+            <th></th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: constantPool">
+        <tr data-bind="template: {name: $root.getConstantPoolTemplateName($data), data: $root.unwrapEnum($data)}">
+        </tr>
+        </tbody>
+    </table>
+
+    <table id="interfaces" border="1" cellspacing="0" cellpadding="3">
+        <thead>
+        <tr>
+            <th colspan="2">interfaces</th>
+        </tr>
+        <tr>
+            <th>index</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: interfaces">
+        <tr>
+            <th data-bind="text: $index"></th>
+            <td data-bind="constantPool: $data"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table id="fields" border="1" cellspacing="0" cellpadding="3">
+        <thead>
+        <tr>
+            <th colspan="6">fields</th>
+        </tr>
+        <tr>
+            <th>index</th>
+            <th>access_flags</th>
+            <th>name_index</th>
+            <th>descriptor_index</th>
+            <th>attribute_count</th>
+            <th>attributes</th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: fields">
+        <tr>
+            <th data-bind="text: $index"></th>
+            <td data-bind="text: accessFlags"></td>
+            <td data-bind="constantPool: nameIndex"></td>
+            <td data-bind="constantPool: descriptorIndex"></td>
+            <td data-bind="text: attributeCount"></td>
+            <td data-bind="foreach: { data: attributes, as: 'attribute' }">
+                <table data-bind="template: {name: $root.getConstantUTF8Value($root.unwrapEnum(attribute).attributeNameIndex), data: $root.unwrapEnum($data)}" border="1"
+                       class="attributes" cellspacing="0" cellpadding="3">
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table id="methods" border="1" cellspacing="0" cellpadding="3">
+        <thead>
+        <tr>
+            <th colspan="2">methods</th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: methods">
+        <tr>
+            <th data-bind="text: $index"></th>
+            <th data-bind="method: $data"></th>
+        </tr>
+        <tr>
+            <th></th>
+            <td>
+                <table class="method">
+                    <tbody>
+                    <tr>
+                        <th>access_flags</th>
+                        <td data-bind="text: accessFlags"></td>
+                    </tr>
+                    <tr>
+                        <th>name_index</th>
+                        <td data-bind="constantPool: nameIndex"></td>
+                    </tr>
+                    <tr>
+                        <th>descriptor_index</th>
+                        <td data-bind="constantPool: descriptorIndex"></td>
+                    </tr>
+                    <tr>
+                        <th>attributes_count</th>
+                        <td data-bind="text: attributesCount"></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">attributes</th>
+                    </tr>
+
+                    <!-- ko foreach: attributes -->
+                    <tr>
+                        <td colspan="2" class="border-left">
+                            <table data-bind="template: {name: $root.getConstantUTF8Value($root.unwrapEnum($data).attributeNameIndex), data: $root.unwrapEnum($data)}"
+                                   border="1" class="attributes"
+                                   cellspacing="0" cellpadding="3">
+                            </table>
+                        </td>
+                    </tr>
+                    <!-- /ko -->
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <table id="attributes" border="1" cellspacing="0" cellpadding="3">
+        <thead>
+        <tr>
+            <th colspan="2">attributes</th>
+        </tr>
+        </thead>
+        <tbody data-bind="foreach: attributes">
+        <tr>
+            <th data-bind="text: $index"></th>
+            <td>
+                <table data-bind="template: {name: $root.getConstantUTF8Value($root.unwrapEnum($data).attributeNameIndex), data: $root.unwrapEnum($data)}"
+                       border="1" class="attributes"
+                       cellspacing="0" cellpadding="3">
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+
+</div>
+
+
+</body>
+
+<script type="text/javascript" src="bin/App.js"></script>
+
+<!-- constant pool -->
+<script type="text/html" id="constant-empty">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+</script>
+
+<!-- CONSTANT_Utf8 -->
+<script type="text/html" id="constant-1">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="text: length"></td>
+    <td data-bind="text: bytes"></td>
+</script>
+
+<!-- CONSTANT_Integer -->
+<script type="text/html" id="constant-3">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="text: bytes"></td>
+    <td></td>
+</script>
+
+<!-- CONSTANT_Float -->
+<script type="text/html" id="constant-4">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="text: bytes"></td>
+    <td></td>
+</script>
+
+<!-- CONSTANT_Long -->
+<script type="text/html" id="constant-5">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="text: highBytes"></td>
+    <td data-bind="text: lowBytes"></td>
+</script>
+
+<!-- CONSTANT_Double -->
+<script type="text/html" id="constant-6">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="text: highBytes"></td>
+    <td data-bind="text: lowBytes"></td>
+</script>
+
+<!-- CONSTANT_Class -->
+<script type="text/html" id="constant-7">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="constantPool: nameIndex"></td>
+    <td></td>
+</script>
+
+<!-- CONSTANT_String -->
+<script type="text/html" id="constant-8">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="constantPool: stringIndex"></td>
+    <td></td>
+</script>
+
+<!-- CONSTANT_Fieldref -->
+<script type="text/html" id="constant-9">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="constantPool: classIndex"></td>
+    <td data-bind="constantPool: nameAndTypeIndex"></td>
+</script>
+
+<!-- CONSTANT_Methodref -->
+<script type="text/html" id="constant-10">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="constantPool: classIndex"></td>
+    <td data-bind="constantPool: nameAndTypeIndex"></td>
+</script>
+
+<!-- CONSTANT_InterfaceMethodref -->
+<script type="text/html" id="constant-11">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="constantPool: classIndex"></td>
+    <td data-bind="constantPool: nameAndTypeIndex"></td>
+</script>
+
+<!-- CONSTANT_NameAndType -->
+<script type="text/html" id="constant-12">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="constantPool: nameIndex"></td>
+    <td data-bind="constantPool: descriptorIndex"></td>
+</script>
+
+<!-- CONSTANT_MethodHandle -->
+<script type="text/html" id="constant-15">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="text: referenceKind"></td>
+    <td data-bind="constantPool: referenceIndex"></td>
+</script>
+
+<!-- CONSTANT_MethodType -->
+<script type="text/html" id="constant-16">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="constantPool: descriptorIndex"></td>
+    <td></td>
+</script>
+
+<!-- CONSTANT_InvokeDynamic -->
+<script type="text/html" id="constant-18">
+    <th data-bind="text: $index, attr: {id: 'constant' + $index()}"></th>
+    <td class="constant-type" data-bind="text: $root.getConstantType(tag)"></td>
+    <td data-bind="text: tag"></td>
+    <td data-bind="text: bootstrapMethodAttrIndex"></td>
+    <td data-bind="text: nameAndTypeIndex"></td>
+</script>
+
+<!-- attributes -->
+<!-- ConstantValue (§4.7.2) -->
+<script type="text/html" id="ConstantValue">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex">
+        </td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>constant_value_index</th>
+        <td data-bind="constantPool: constantValueIndex"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- Code (§4.7.3) -->
+<script type="text/html" id="Code">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>max_stack</th>
+        <td data-bind="text: maxStack"></td>
+    </tr>
+    <tr>
+        <th>max_locals</th>
+        <td data-bind="text: maxLocals"></td>
+    </tr>
+    <tr>
+        <th>code_length</th>
+        <td data-bind="text: codeLength"></td>
+    </tr>
+    <tr>
+        <th colspan="2">code</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3" class="code-table">
+                <thead>
+                <tr>
+                    <th>pc</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: code">
+                <tr>
+                    <th data-bind="text: pc"></th>
+                    <td data-bind="bytecode: $data" nowrap></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <th>exception_table_length</th>
+        <td data-bind="text: exceptionTableLength"></td>
+    </tr>
+    <!-- ko if: exceptionTableLength > 0 -->
+    <tr>
+        <th colspan="2">exception_table</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>start_pc</th>
+                    <th>end_pc</th>
+                    <th>handler_pc</th>
+                    <th>catch_type</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: exceptionTable">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="text: startPC">start_pc</td>
+                    <td data-bind="text: endPC">end_pc</td>
+                    <td data-bind="text: handlerPC">handler_pc</td>
+                    <td data-bind="text: catchType">catch_type</td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    <!-- /ko -->
+    <tr>
+        <th>attributes_count</th>
+        <td data-bind="text: attributesCount"></td>
+    </tr>
+    <tr>
+        <th colspan="2">attributes</th>
+    </tr>
+    <!-- ko foreach: attributes -->
+    <tr>
+        <td colspan="2" class="border-left">
+            <table data-bind="template: {name: $root.getConstantUTF8Value($root.unwrapEnum($data).attributeNameIndex), data: $root.unwrapEnum($data)}" border="1"
+                   class="attributes"
+                   cellspacing="0" cellpadding="3">
+            </table>
+        </td>
+    </tr>
+    <!-- /ko -->
+    </tbody>
+</script>
+
+<!-- StackMapTable (§4.7.4) -->
+<script type="text/html" id="StackMapTable">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex">
+        </td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>number_of_entries</th>
+        <td data-bind="text: numberOfEntries"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- Exceptions (§4.7.5) -->
+<script type="text/html" id="Exceptions">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>number_of_exceptions</th>
+        <td data-bind="text: numberOfExceptions"></td>
+    </tr>
+    <tr>
+        <th colspan="2">exception_index_table</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>Exception</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: exceptionIndexTable">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="constantPool: $data"></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- InnerClasses (§4.7.6) -->
+<script type="text/html" id="InnerClasses">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>number_of_classes</th>
+        <td data-bind="text: numberOfClasses"></td>
+    </tr>
+    <tr>
+        <th colspan="2">classes</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>inner_class_info_index</th>
+                    <th>outer_class_info_index</th>
+                    <th>inner_name_index</th>
+                    <th>inner_class_access_flags</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: classes">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="constantPool: innerClassInfoIndex"></td>
+                    <td data-bind="constantPool: outerClassInfoIndex"></td>
+                    <td data-bind="constantPool: innerNameIndex"></td>
+                    <td data-bind="text: innerClassAccessFlags"></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- EnclosingMethod (§4.7.7) -->
+<script type="text/html" id="EnclosingMethod">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>class_index</th>
+        <td data-bind="text: classIndex"></td>
+    </tr>
+    <tr>
+        <th>method_index</th>
+        <td data-bind="text: methodIndex"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- Synthetic (§4.7.8) -->
+<script type="text/html" id="Synthetic">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- Signature (§4.7.9) -->
+<script type="text/html" id="Signature">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>signature_index</th>
+        <td data-bind="constantPool: signatureIndex"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- SourceFile (§4.7.10) -->
+<script type="text/html" id="SourceFile">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>sourcefile_index</th>
+        <td data-bind="constantPool: sourcefileIndex"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- SourceFile (§4.7.11) -->
+<script type="text/html" id="SourceDebugExtension">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- LineNumberTable (§4.7.12) -->
+<script type="text/html" id="LineNumberTable">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>line_number_table_length</th>
+        <td data-bind="text: lineNumberTableLength"></td>
+    </tr>
+    <tr>
+        <th colspan="2">line_number_table</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>start_pc</th>
+                    <th>line_number</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: lineNumberTable">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="text: startPC"></td>
+                    <td data-bind="text: lineNumber"></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- LocalVariableTable (§4.7.13) -->
+<script type="text/html" id="LocalVariableTable">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="constantPool: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>local_variable_table_length</th>
+        <td data-bind="text: localVariableTableLength"></td>
+
+    </tr>
+    <tr>
+        <th colspan="2">local_variable_table</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>start_pc</th>
+                    <th>length</th>
+                    <th>name_index</th>
+                    <th>descriptor_index</th>
+                    <th>index</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: localVariableTable">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="text: startPC"></td>
+                    <td data-bind="text: length"></td>
+                    <td data-bind="constantPool: nameIndex"></td>
+                    <td data-bind="constantPool: descriptorIndex"></td>
+                    <td data-bind="text: index"></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- LocalVariableTypeTable (§4.7.14) -->
+<script type="text/html" id="LocalVariableTypeTable">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="constantPool: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>local_variable_type_table_length</th>
+        <td data-bind="text: localVariableTypeTableLength"></td>
+
+    </tr>
+    <tr>
+        <th colspan="2">local_variable_type_table</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>start_pc</th>
+                    <th>length</th>
+                    <th>name_index</th>
+                    <th>signature_index</th>
+                    <th>index</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: localVariableTypeTable">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="text: startPC"></td>
+                    <td data-bind="text: length"></td>
+                    <td data-bind="constantPool: nameIndex"></td>
+                    <td data-bind="constantPool: signatureIndex"></td>
+                    <td data-bind="text: index"></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- Deprecated (§4.7.15) -->
+<script type="text/html" id="Deprecated">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- RuntimeVisibleAnnotations (§4.7.16) -->
+<script type="text/html" id="RuntimeVisibleAnnotations">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>num_annotations</th>
+        <td data-bind="text: numAnnotations"></td>
+    </tr>
+    <tr>
+        <th>annotations</th>
+        <td>
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>type_index</th>
+                    <th>num_element_value_pairs</th>
+                    <th>element_value_pairs</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: annotations">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="text: typeIndex"></td>
+                    <td data-bind="text: numElementValuePairs"></td>
+                    <td data-bind="if: numElementValuePairs > 0">
+                        <table border="1" cellspacing="0" cellpadding="3">
+                            <thead>
+                            <tr>
+                                <th>index</th>
+                                <th>element_name_index</th>
+                                <th>value</th>
+                            </tr>
+                            </thead>
+                            <tbody data-bind="foreach: elementValuePairs">
+                            <tr data-bind="template: {name: $root.elementValueTemplate($data.value.tag)}"></tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- RuntimeInvisibleAnnotations (§4.7.17) -->
+<script type="text/html" id="RuntimeInvisibleAnnotations">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>num_annotations</th>
+        <td data-bind="text: numAnnotations"></td>
+    </tr>
+    <tr>
+        <th>annotations</th>
+        <td>
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>type_index</th>
+                    <th>num_element_value_pairs</th>
+                    <th>element_value_pairs</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: annotations">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="text: typeIndex"></td>
+                    <td data-bind="text: numElementValuePairs"></td>
+                    <td data-bind="if: numElementValuePairs > 0">
+                        <table border="1" cellspacing="0" cellpadding="3">
+                            <thead>
+                            <tr>
+                                <th>index</th>
+                                <th>element_name_index</th>
+                                <th>value</th>
+                            </tr>
+                            </thead>
+                            <tbody data-bind="foreach: elementValuePairs">
+                            <tr data-bind="template: {name: $root.elementValueTemplate($data.value.tag)}"></tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- RuntimeVisibleParameterAnnotations (§4.7.18) -->
+<script type="text/html" id="RuntimeVisibleParameterAnnotations">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>num_parameters</th>
+        <td data-bind="text: numParameters"></td>
+    </tr>
+    <tr>
+        <th>parameter_annotations</th>
+        <td>
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>type_index</th>
+                    <th>num_element_value_pairs</th>
+                    <th>element_value_pairs</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: parameterAnnotations">
+                <tr>
+                    <th>num_annotations</th>
+                    <td data-bind="text: numAnnotations"></td>
+                </tr>
+                <tr>
+                    <th colspan="2">annotations</th>
+                </tr>
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="if: numAnnotations > 0">
+                        <table border="1" cellspacing="0" cellpadding="3">
+                            <thead>
+                            <tr>
+                                <th>index</th>
+                                <th>element_name_index</th>
+                                <th>value</th>
+                            </tr>
+                            </thead>
+                            <tbody data-bind="foreach: annotations">
+                            <tr data-bind="template: {name: $root.elementValueTemplate($data.value.tag)}"></tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- RuntimeInvisibleParameterAnnotations (§4.7.19) -->
+<script type="text/html" id="RuntimeInvisibleParameterAnnotations">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>num_parameters</th>
+        <td data-bind="text: numParameters"></td>
+    </tr>
+    <tr>
+        <th>parameter_annotations</th>
+        <td>
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>type_index</th>
+                    <th>num_element_value_pairs</th>
+                    <th>element_value_pairs</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: parameterAnnotations">
+                <tr>
+                    <th>num_annotations</th>
+                    <td data-bind="text: numAnnotations"></td>
+                </tr>
+                <tr>
+                    <th colspan="2">annotations</th>
+                </tr>
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="if: numAnnotations > 0">
+                        <table border="1" cellspacing="0" cellpadding="3">
+                            <thead>
+                            <tr>
+                                <th>index</th>
+                                <th>element_name_index</th>
+                                <th>value</th>
+                            </tr>
+                            </thead>
+                            <tbody data-bind="foreach: annotations">
+                            <tr data-bind="template: {name: $root.elementValueTemplate($data.value.tag)}"></tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- AnnotationDefault (§4.7.20) -->
+<script type="text/html" id="AnnotationDefault">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th colspan="2">element_value</th>
+    </tr>
+    <tr>
+        <table border="1" cellspacing="0" cellpadding="3">
+            <tbody>
+            <tr data-bind="template: {name: $root.elementValueTemplate(elementValue.tag), data:elementValue}"></tr>
+            </tbody>
+        </table>
+    </tr>
+    </tbody>
+</script>
+
+<!-- BootstrapMethods (§4.7.21) -->
+<script type="text/html" id="BootstrapMethods">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>num_bootstrap_methods</th>
+        <td data-bind="text: numBootstrapMethods"></td>
+    </tr>
+    <tr>
+        <th>bootstrap_methods</th>
+        <td>
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>bootstrap_method_ref</th>
+                    <th>num_bootstrap_arguments</th>
+                    <th>bootstrap_arguments</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: bootstrapMethods">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="constantPool: bootstrapMethodRef"></td>
+                    <td data-bind="text: numBootstrapArguments"></td>
+                    <td data-bind="if: numBootstrapArguments > 0">
+                        <table border="1" cellspacing="0" cellpadding="3">
+                            <thead>
+                            <tr>
+                                <th>index</th>
+                                <th>BootstrapArgument</th>
+                            </tr>
+                            </thead>
+                            <tbody data-bind="foreach: bootstrapArguments">
+                            <tr>
+                                <th data-bind="text: $index"></th>
+                                <td data-bind="constantPool: $data"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- MethodParameters -->
+<script type="text/html" id="MethodParameters">
+    <thead>
+    <tr>
+        <th class="constant-utf8-value" colspan="2"
+            data-bind="text: $root.getConstantUTF8Value(attributeNameIndex)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <th>attribute_name_index</th>
+        <td data-bind="constantPool: attributeNameIndex"></td>
+    </tr>
+    <tr>
+        <th>attribute_length</th>
+        <td data-bind="text: attributeLength"></td>
+    </tr>
+    <tr>
+        <th>num_method_parameters</th>
+        <td data-bind="text: numMethodParameters"></td>
+
+    </tr>
+    <tr>
+        <th colspan="2">method_parameters</th>
+    </tr>
+    <tr>
+        <td colspan="2" class="border-left">
+            <table border="1" cellspacing="0" cellpadding="3">
+                <thead>
+                <tr>
+                    <th>index</th>
+                    <th>name_index</th>
+                    <th>flag</th>
+                </tr>
+                </thead>
+                <tbody data-bind="foreach: methodParameters">
+                <tr>
+                    <th data-bind="text: $index"></th>
+                    <td data-bind="constantPool: nameIndex"></td>
+                    <td data-bind="text: flag"></td>
+                </tr>
+                </tbody>
+            </table>
+        </td>
+    </tr>
+    </tbody>
+</script>
+
+<!-- element value -->
+<script type="text/html" id="elementValue-other">
+    <th data-bind="text: $index"></th>
+    <td data-bind="text: elementNameIndex"></td>
+    <td>
+        <table border="1" cellspacing="0" cellpadding="3">
+            <thead>
+            <tr>
+                <th>tag</th>
+                <th>const_value_index</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td data-bind="text: tag"></td>
+                <td data-bind="text: constValueIndex"></td>
+            </tr>
+            </tbody>
+        </table>
+    </td>
+</script>
+<script type="text/html" id="elementValue-enum">
+    <th data-bind="text: $index"></th>
+    <td data-bind="text: elementNameIndex"></td>
+    <td>
+        <table border="1" cellspacing="0" cellpadding="3">
+            <thead>
+            <tr>
+                <th>tag</th>
+                <th>type_name_index</th>
+                <th>const_name_index</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td data-bind="text: tag"></td>
+                <td data-bind="text: enumConstValue.typeNameIndex"></td>
+                <td data-bind="text: enumConstValue.constNameIndex"></td>
+            </tr>
+            </tbody>
+        </table>
+    </td>
+</script>
+<script type="text/html" id="elementValue-class">
+    <th data-bind="text: $index"></th>
+    <td data-bind="text: elementNameIndex"></td>
+    <td>
+        <table border="1" cellspacing="0" cellpadding="3">
+            <thead>
+            <tr>
+                <th>tag</th>
+                <th>const_value_index</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td data-bind="text: tag"></td>
+                <td data-bind="text: classInfoIndex"></td>
+            </tr>
+            </tbody>
+        </table>
+    </td>
+</script>
+<script type="text/html" id="elementValue-annotation">
+    <th data-bind="text: $index"></th>
+    <td data-bind="text: elementNameIndex"></td>
+    <td>
+        <table border="1" cellspacing="0" cellpadding="3">
+            <thead>
+            <tr>
+                <th>tag</th>
+                <th>index</th>
+                <th>type_index</th>
+                <th>num_element_value_pairs</th>
+                <th>element_value_pairs</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td data-bind="text: tag"></td>
+                <td data-bind="text: annotationValue.typeIndex"></td>
+                <td data-bind="text: annotationValue.numElementValuePairs"></td>
+                <td data-bind="if: annotationValue.numElementValuePairs > 0">
+                    <table border="1" cellspacing="0" cellpadding="3">
+                        <thead>
+                        <tr>
+                            <th>index</th>
+                            <th>element_name_index</th>
+                            <th>value</th>
+                        </tr>
+                        </thead>
+                        <tbody data-bind="foreach: annotationValue.elementValuePairs">
+                        <tr data-bind="template: {name: $root.elementValueTemplate($data.value.tag)}"></tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </td>
+    <td></td>
+</script>
+<script type="text/html" id="elementValue-array">
+    <th data-bind="text: $index"></th>
+    <td data-bind="text: elementNameIndex"></td>
+    <td>
+        <table border="1" cellspacing="0" cellpadding="3">
+            <thead>
+            <tr>
+                <th>tag</th>
+                <th>num_values</th>
+                <th>values</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td data-bind="text: tag"></td>
+                <td data-bind="text: arrayValue.numValues"></td>
+                <td>
+                    <table border="1" cellspacing="0" cellpadding="3">
+                        <thead>
+                        <tr>
+                            <th>index</th>
+                            <th>element_name_index</th>
+                            <th>value</th>
+                        </tr>
+                        </thead>
+                        <tbody data-bind="foreach: values">
+                        <tr data-bind="template: {name: $root.elementValueTemplate($data.tag)}"></tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </td>
+</script>
+</html>
+
